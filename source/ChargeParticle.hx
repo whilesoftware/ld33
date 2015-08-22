@@ -3,7 +3,9 @@ import flixel.FlxSprite;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxSpriteUtil;
 import flixel.math.FlxPoint;
+#if not mac
 import lime.math.Vector2;
+#end
 import flixel.tweens.FlxEase;
 
 /**
@@ -32,8 +34,6 @@ class ChargeParticle extends FlxSprite
 		
 		x = xpos + initial_distance * Math.cos(_angle);
 		y = ypos + initial_distance * Math.sin(_angle);
-		
-		trace("started a new particle!");
 		
 		// tween towards the center and then disappear
 		FlxTween.tween(this, { x:xpos, y:ypos, alpha:0 }, MathHelper.RandomRangeFloat(0.2, 0.4), { ease:FlxEase.quadIn } ).onComplete = 

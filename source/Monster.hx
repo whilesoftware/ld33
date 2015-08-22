@@ -4,7 +4,9 @@ import flixel.group.FlxGroup;
 import flixel.util.FlxTimer;
 import flixel.FlxG;
 import flixel.input.keyboard.FlxKey;
+#if not mac
 import lime.math.Vector2;
+#end
 
 /**
  * ...
