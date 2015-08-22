@@ -27,10 +27,15 @@ class GameState extends FlxState
 			add(new Grass(Math.floor(Math.random() * FlxG.width), Math.floor(Math.random() * FlxG.height), Math.random() > 0.6));
 		}
 		
+		// generate level geometry
+		// add the collidable level geometry/sprites first (always in background)
+		
 		// create the monster and put him in the middle of the screen
 		monster = new Monster();
 		add(monster);
 		monster.setposition(FlxG.width / 2, FlxG.height / 2);
+		
+		// create the non-collidable level geometry/sprites last (always in foreground)
 	}
 	
 	/**

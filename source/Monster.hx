@@ -12,6 +12,11 @@ import lime.math.Vector2;
  */
 class Monster extends FlxGroup
 {
+	var charge_effect:ChargeEffect;
+	
+	var offset_x:Int = 33;
+	var offset_y:Int = 37;
+	
 	var eye:FlxSprite = new FlxSprite();
 	var pupil:FlxSprite = new FlxSprite();
 	var chest:FlxSprite = new FlxSprite();
@@ -37,9 +42,17 @@ class Monster extends FlxGroup
 	var is_crouching:Bool = false;
 	var crouch_start_time:Int = -1;
 	
+	var is_charging:Bool = false;
+	var charge_start_time:Int = -1;
+	
+	var fire_weapon:Bool = false;
+	
 	public function new() 
 	{
 		super();
+		
+		charge_effect = new ChargeEffect();
+		add(charge_effect);
 		
 		eye.loadGraphic("assets/images/monster-spritesheet.png", true, 64, 64);
 		eye.animation.add("cycle", [12, 13, 14, 15], 10, true);
@@ -93,6 +106,8 @@ class Monster extends FlxGroup
 		new FlxTimer().start(Math.random() * 0.1).onComplete = function(t:FlxTimer):Void {
 			right_leg.animation.play("cycle");
 		}
+		
+		
 	}
 	
 	public function setposition(x:Float, y:Float) {
@@ -136,6 +151,26 @@ class Monster extends FlxGroup
 			eye_pos.y += crouch_distance;
 			pupil_pos.y += crouch_distance;
 			chest_pos.y += crouch_distance;
+		}
+		
+		// charging? generate some charge particles
+		if (is_charging) {
+			charge_effect.SpawnSome(2, base_x + offset_x, base_y + offset_y);
+			
+			// the pupil gets bigger as we charge longer
+			var ctime:Float = (Reg.frame_number - charge_start_time) / 60;
+			if (ctime < 0.15) {
+				pupil.animation.play("0");
+			}else if (ctime < 0.3) {
+				pupil.animation.play("1");
+			}else if (ctime < 0.45) {
+				pupil.animation.play("2");
+			}else {
+				pupil.animation.play("3");
+			}
+		}else {
+			// set the eyes to their default state
+			pupil.animation.play("0");
 		}
 		
 		// walking?
@@ -200,6 +235,24 @@ class Monster extends FlxGroup
 		if (FlxG.keys.anyJustReleased([FlxKey.SPACE])) {
 			is_crouching = false;
 		}
+		
+		if (FlxG.mouse.justPressed) {
+			is_charging = true;
+			charge_start_time = Reg.frame_number;
+		}
+		
+		if (FlxG.mouse.justReleased) {
+			is_charging = false;
+			fire_weapon = true;
+		}
+	}
+	
+	public function act() {
+		if (fire_weapon) {
+			// fire the gun
+			
+			fire_weapon = false;
+		}
 	}
 	
 	public override function update(elapsed:Float) {
@@ -208,6 +261,8 @@ class Monster extends FlxGroup
 		move();
 		
 		animate();
+		
+		act();
 		
 		super.update(elapsed);
 	}
