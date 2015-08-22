@@ -34,4 +34,14 @@ class Reg
 	 * Especially useful for setting up multiple save slots.
 	 */
 	public static var saves:Array<FlxSave> = [];
+	
+	
+	public static var frame_number:Int = -1;
+	
+	
+	public static function update(elasped:Float) {
+		frame_number++;
+	}
+	
+	
 }

@@ -12,6 +12,8 @@ import flixel.math.FlxMath;
  */
 class GameState extends FlxState
 {
+	var monster:Monster;
+	
 	/**
 	 * Function that is called up when to state is created to set it up. 
 	 */
@@ -24,6 +26,11 @@ class GameState extends FlxState
 		for (x in 1...100) {
 			add(new Grass(Math.floor(Math.random() * FlxG.width), Math.floor(Math.random() * FlxG.height), Math.random() > 0.6));
 		}
+		
+		// create the monster and put him in the middle of the screen
+		monster = new Monster();
+		add(monster);
+		monster.setposition(FlxG.width / 2, FlxG.height / 2);
 	}
 	
 	/**
@@ -40,6 +47,10 @@ class GameState extends FlxState
 	 */
 	override public function update(elapsed:Float):Void
 	{
+		Reg.update(elapsed);
+		
+		monster.update(elapsed);
 		super.update(elapsed);
+		
 	}	
 }
