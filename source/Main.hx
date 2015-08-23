@@ -1,5 +1,8 @@
 package;
 
+import crashdumper.CrashDumper;
+import crashdumper.SessionData;
+
 import flash.display.Sprite;
 import flash.display.StageAlign;
 import flash.display.StageScaleMode;
@@ -63,6 +66,11 @@ class Main extends Sprite
 			gameHeight = Math.ceil(stageHeight / zoom);
 		}
 
+		/*
+		var unique_id:String = SessionData.generateID("ld33_");
+        var crashDumper = new CrashDumper(unique_id);
+		*/
+		
 		addChild(new FlxGame(gameWidth, gameHeight, initialState, zoom, framerate, framerate, skipSplash, startFullscreen));
 	}
 }

@@ -18,6 +18,8 @@ import flixel.math.FlxVector;
 class Monster extends FlxGroup
 {
 	public var monster_collider:MonsterCollider;
+	var monster_collider_offset_x:Int = 16;
+	var monster_collider_offset_y = 42;
 	
 	var mouse_offset:Vector2 = new Vector2();
 	
@@ -59,6 +61,8 @@ class Monster extends FlxGroup
 	public function new() 
 	{
 		super();
+		
+		trace("new monster!");
 		
 		monster_collider = new MonsterCollider();
 		add(monster_collider);
@@ -126,7 +130,7 @@ class Monster extends FlxGroup
 		base_x = x;
 		base_y = y;
 		
-		monster_collider.setPosition(base_x, base_y);
+		monster_collider.setPosition(base_x + monster_collider_offset_x, base_y + monster_collider_offset_y);
 	}
 	
 	public function animate():Void {
@@ -258,17 +262,19 @@ class Monster extends FlxGroup
 			charge_start_time = Reg.frame_number;
 		}
 		
-		if (FlxG.mouse.justReleased) {
+		if (FlxG.mouse.justReleased && is_charging) {
 			is_charging = false;
 			fire_weapon = true;
+			trace("mouse just released!");
 		}
 	}
 	
 	public function act() {
 		if (fire_weapon) {
+			fire_weapon = false;
 			// fire the gun
-			var new_rail:Railshot = new Railshot(this);
-			add(new_rail);
+			var new_rail:Railshot = new Railshot();
+			Reg.rails.add(new_rail);
 			
 			if (mouse_offset.x == 0 && mouse_offset.y == 0) {
 				mouse_offset.y = 1;
@@ -283,9 +289,9 @@ class Monster extends FlxGroup
 			endpos.y += mouse_offset.y * 1000;
 			var rayresult:FlxPoint = new FlxPoint();
 			
-			trace("basepos: " + base_x + " - " + base_y);
-			trace("startpos: " + startpos.toString());
-			trace("endpos: " + endpos.toString());
+			//trace("basepos: " + base_x + " - " + base_y);
+			//trace("startpos: " + startpos.toString());
+			//trace("endpos: " + endpos.toString());
 			
 			
 			// where is this going to strike?
@@ -295,15 +301,17 @@ class Monster extends FlxGroup
 			
 			var rail_vector:FlxVector = new FlxVector(endpos.x - startpos.x, endpos.y - startpos.y);
 			
-			new_rail.gogogo(startpos.x, startpos.y, rail_vector.radians, rail_vector.length, mouse_offset.x, mouse_offset.y, Math.min(1,(Reg.frame_number - charge_start_time)/30)); 
+			new_rail.gogogo(startpos.x, startpos.y, rail_vector.radians, rail_vector.length, mouse_offset.x, mouse_offset.y, Math.min(1,(Reg.frame_number - charge_start_time)/30), rail_vector); 
 			
-			fire_weapon = false;
+			
 		}
 	}
 	
 	public override function update(elapsed:Float) {
-		base_x = monster_collider.x;
-		base_y = monster_collider.y;
+		super.update(elapsed);
+		
+		base_x = monster_collider.x - monster_collider_offset_x;
+		base_y = monster_collider.y - monster_collider_offset_y;
 		
 		gather_input();
 		
@@ -312,7 +320,5 @@ class Monster extends FlxGroup
 		animate();
 		
 		act();
-		
-		super.update(elapsed);
 	}
 }

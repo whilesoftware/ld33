@@ -2,6 +2,7 @@ package;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
 import flixel.math.FlxPoint;
+import flixel.math.FlxVector;
 import flixel.util.FlxTimer;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
@@ -15,13 +16,13 @@ import flixel.util.FlxColor;
 class Railshot extends FlxGroup 
 {
 	var shot_body:FlxSprite;
-	var pgroup:FlxGroup;
 
-	public function new(_parent:FlxGroup) 
+	public function new() 
 	{
 		super();
 		
-		pgroup = _parent;
+		trace("railshot:new()");
+		
 		shot_body = new FlxSprite();
 		shot_body.loadGraphic("assets/images/wide-railshot.png", true, 128, 16);
 		shot_body.animation.add("cycle", [0, 1, 2, 3], 10, true);
@@ -31,7 +32,8 @@ class Railshot extends FlxGroup
 		add(shot_body);
 	}
 	
-	public function gogogo(xstart:Float, ystart:Float, _angle:Float, _length:Float, angle_x:Float, angle_y:Float, size:Float) {
+	public function gogogo(xstart:Float, ystart:Float, _angle:Float, _length:Float, angle_x:Float, angle_y:Float, size:Float, fvec:FlxVector) {
+		trace("railshot:gogogo()");
 		/*
 		var new_sprite:FlxSprite = new FlxSprite();
 		new_sprite.makeGraphic(64, 2, FlxColor.MAGENTA);
@@ -60,8 +62,9 @@ class Railshot extends FlxGroup
 		shot_body.angle = _angle * 180 / Math.PI;
 		new FlxTimer().start(0.25).onComplete = function(t:FlxTimer):Void {
 			kill();
-			pgroup.remove(this);
+			Reg.rails.remove(this);
 		}
+		
 		shot_body.scale.x = _length / 128;
 		shot_body.scale.y = 0.01;
 		shot_body.visible = true;
@@ -70,6 +73,15 @@ class Railshot extends FlxGroup
 				FlxTween.tween(shot_body.scale, { y: 0 }, 0.1, { ease:FlxEase.quintIn } );
 			}
 		shot_body.animation.play("cycle");
+		
+		var rc:RailshotCollider = 
+			new RailshotCollider(
+				0, 
+				_length, 
+				size * 8, 
+				xstart +  fvec.x / 2, 
+				ystart + fvec.y / 2, 
+				_angle * 180 / Math.PI);
 		
 		/*
 		FlxTween.tween(shot_body.scale, { x:1, y:1}, 0.05, { ease:FlxEase.quintOut } ).onComplete = 

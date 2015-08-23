@@ -1,5 +1,6 @@
 package;
 
+import flixel.group.FlxGroup;
 import flixel.tile.FlxTilemap;
 import flixel.util.FlxSave;
 
@@ -41,6 +42,13 @@ class Reg
 	
 	public static var tilemap:FlxTilemap;
 	
+	public static var trees:Map<Int,Tree> = new Map<Int,Tree>();
+	public static var enemies:Map<Int,Enemy> = new Map<Int,Enemy>();
+	
+	public static var gamestate:GameState;
+	public static var monster:Monster;
+	public static var rails:FlxGroup;
+	public static var rail_colliders:FlxGroup;
 	
 	public static function update(elasped:Float) {
 		frame_number++;
