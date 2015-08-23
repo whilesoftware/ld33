@@ -1,6 +1,7 @@
 package;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
+import flixel.math.FlxPoint;
 import flixel.util.FlxTimer;
 import flixel.FlxG;
 import flixel.input.keyboard.FlxKey;
@@ -8,12 +9,18 @@ import flixel.input.keyboard.FlxKey;
 import lime.math.Vector2;
 #end
 
+import flixel.math.FlxVector;
+
 /**
  * ...
  * @author ...
  */
 class Monster extends FlxGroup
 {
+	public var monster_collider:MonsterCollider;
+	
+	var mouse_offset:Vector2 = new Vector2();
+	
 	var charge_effect:ChargeEffect;
 	
 	var offset_x:Int = 33;
@@ -52,6 +59,9 @@ class Monster extends FlxGroup
 	public function new() 
 	{
 		super();
+		
+		monster_collider = new MonsterCollider();
+		add(monster_collider);
 		
 		charge_effect = new ChargeEffect();
 		add(charge_effect);
@@ -115,6 +125,8 @@ class Monster extends FlxGroup
 	public function setposition(x:Float, y:Float) {
 		base_x = x;
 		base_y = y;
+		
+		monster_collider.setPosition(base_x, base_y);
 	}
 	
 	public function animate():Void {
@@ -131,7 +143,8 @@ class Monster extends FlxGroup
 		// walk cycle (bounces up and down, feet shuffle left/right)
 		
 		// eyes point towards the mouse cursor
-		var mouse_offset:Vector2 = new Vector2(FlxG.mouse.getWorldPosition().x, FlxG.mouse.getWorldPosition().y);
+		mouse_offset.x = FlxG.mouse.getWorldPosition().x;
+		mouse_offset.y = FlxG.mouse.getWorldPosition().y;
 		mouse_offset.x -= (base_x + 33);
 		mouse_offset.y -= (base_y + 37);
 		
@@ -209,8 +222,10 @@ class Monster extends FlxGroup
 			active_v_speed /= 2;
 		}
 		
-		base_x += active_h_speed;
-		base_y += active_v_speed;
+		//base_x += active_h_speed;
+		//base_y += active_v_speed;
+		monster_collider.velocity.x = active_h_speed * 100;
+		monster_collider.velocity.y = active_v_speed * 100;
 	}
 	
 	public function gather_input():Void {
@@ -252,12 +267,44 @@ class Monster extends FlxGroup
 	public function act() {
 		if (fire_weapon) {
 			// fire the gun
+			var new_rail:Railshot = new Railshot(this);
+			add(new_rail);
+			
+			if (mouse_offset.x == 0 && mouse_offset.y == 0) {
+				mouse_offset.y = 1;
+			}
+			
+			var startpos:FlxPoint = 
+				new FlxPoint(base_x + offset_x + mouse_offset.x * 20, base_y + offset_y - 3 + mouse_offset.y * 16);
+				//new FlxPoint(base_x + offset_x, base_y + offset_y);
+				
+			var endpos:FlxPoint = new FlxPoint(startpos.x, startpos.y);
+			endpos.x += mouse_offset.x * 1000;
+			endpos.y += mouse_offset.y * 1000;
+			var rayresult:FlxPoint = new FlxPoint();
+			
+			trace("basepos: " + base_x + " - " + base_y);
+			trace("startpos: " + startpos.toString());
+			trace("endpos: " + endpos.toString());
+			
+			
+			// where is this going to strike?
+			if (! Reg.tilemap.ray(startpos, endpos, rayresult)) {
+				endpos = rayresult;
+			}
+			
+			var rail_vector:FlxVector = new FlxVector(endpos.x - startpos.x, endpos.y - startpos.y);
+			
+			new_rail.gogogo(startpos.x, startpos.y, rail_vector.radians, rail_vector.length, mouse_offset.x, mouse_offset.y, Math.min(1,(Reg.frame_number - charge_start_time)/30)); 
 			
 			fire_weapon = false;
 		}
 	}
 	
 	public override function update(elapsed:Float) {
+		base_x = monster_collider.x;
+		base_y = monster_collider.y;
+		
 		gather_input();
 		
 		move();

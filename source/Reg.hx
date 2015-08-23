@@ -1,5 +1,6 @@
 package;
 
+import flixel.tile.FlxTilemap;
 import flixel.util.FlxSave;
 
 /**
@@ -37,6 +38,8 @@ class Reg
 	
 	
 	public static var frame_number:Int = -1;
+	
+	public static var tilemap:FlxTilemap;
 	
 	
 	public static function update(elasped:Float) {

@@ -32,15 +32,14 @@ class ChargeParticle extends FlxSprite
 		// pick a point that is initial_distance away from this center, at some random angle
 		var _angle:Float = MathHelper.RandomRangeFloat(0, 2* Math.PI);
 		
-		x = xpos + initial_distance * Math.cos(_angle);
-		y = ypos + initial_distance * Math.sin(_angle);
+		x = xpos + MathHelper.RandomRangeFloat(0.7,1.3) * initial_distance * Math.cos(_angle);
+		y = ypos + MathHelper.RandomRangeFloat(0.7,1.3) * initial_distance * Math.sin(_angle);
 		
 		// tween towards the center and then disappear
-		FlxTween.tween(this, { x:xpos, y:ypos, alpha:0 }, MathHelper.RandomRangeFloat(0.2, 0.4), { ease:FlxEase.quadIn } ).onComplete = 
+		FlxTween.tween(this, { x:xpos, y:ypos, alpha:0 }, MathHelper.RandomRangeFloat(0.1, 0.3), { ease:FlxEase.sineIn } ).onComplete = 
 			function(t:FlxTween):Void {
 				kill();
 				my_parent.remove(this);
 			}
 	}
-	
 }
