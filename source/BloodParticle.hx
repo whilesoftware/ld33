@@ -18,11 +18,14 @@ class BloodParticle extends FlxSprite
 	var distance:Float = 90;
 	var spatter_size:Int = 1;
 	var fall_time:Float = 0;
+	var narrow_factor:Float = 1;
 	
-	public function new() 
+	public function new(_distance:Float=90, _narrow_factor:Float=1) 
 	{
 		super();
-		spatter_size = MathHelper.RandomRangeInt(1, 5);
+		distance = _distance;
+		narrow_factor = _narrow_factor;
+		spatter_size = MathHelper.RandomRangeInt(2, 4);
 		fall_time = MathHelper.RandomRangeFloat(0.5, 1);
 		
 		makeGraphic(spatter_size, spatter_size , 0xffe70000);
@@ -33,7 +36,7 @@ class BloodParticle extends FlxSprite
 	
 	public function gobabygo(xpos:Float, ypos:Float, _angle:Float) {
 		// pick a point that is initial_distance away from this center, at some random angle
-		var _angle:Float = MathHelper.RandomRangeFloat(_angle - 0.3, _angle + 0.3);
+		var _angle:Float = MathHelper.RandomRangeFloat(_angle - 0.3 * narrow_factor, _angle + 0.3 * narrow_factor);
 		
 		var new_x = xpos + (3/spatter_size + MathHelper.RandomRangeFloat(0.1,0.5)) * distance * Math.cos(_angle);
 		//var new_y = ypos + MathHelper.RandomRangeFloat(0.7, 1.3) * distance * Math.sin(_angle);

@@ -39,7 +39,7 @@ class GameState extends FlxState
 	var spawn_points:Map<Int,FlxPoint> = new Map<Int,FlxPoint>();
 	
 	var bushgroup:FlxGroup;
-	var enemies:FlxTypedGroup<Enemy>;
+	public var enemies:FlxTypedGroup<Enemy>;
 	var railshot_colliders:FlxGroup;
 	
 	var next_spawn_time:Int = -1;
@@ -49,6 +49,7 @@ class GameState extends FlxState
 	public var particle_group:FlxGroup;
 	public var blood_group:FlxGroup;
 	public var kill_particle_group:FlxGroup;
+	public var spawn_particle_group:FlxGroup;
 	
 	static inline var pregame:Int = -1;
 	static inline var playing:Int = 0;
@@ -105,6 +106,9 @@ class GameState extends FlxState
 		kill_particle_group = new FlxGroup();
 		add(kill_particle_group);
 		
+		spawn_particle_group = new FlxGroup();
+		add(spawn_particle_group);
+		
 		// create a few grasses in random positions
 		for (x in 1...500) {
 			add(new Grass(Math.floor(Math.random() * tile_width * arena_width), Math.floor(Math.random() * tile_height * arena_height), Math.random() > 0.6));
@@ -136,6 +140,8 @@ class GameState extends FlxState
 		
 		enemies = new FlxTypedGroup<Enemy>();
 		add(enemies);
+		
+		
 		
 		// create the monster and put him in the middle of the screen
 		monster = new Monster();
@@ -214,15 +220,13 @@ class GameState extends FlxState
 				//score_text.y = monster.base_y - 30;
 				gameover_text.visible = false;
 
-				// update the score text
-
 				// is it time to spawn a bad guy?
 				if (Reg.frame_number == next_spawn_time) {
 					for (t in 0...next_spawn_count) {
-						var enemy:Enemy = new Enemy();
+						var enemy_spawner:EnemySpawner = new EnemySpawner();
 						var spawn_position:FlxPoint = spawn_points[MathHelper.RandomRangeInt(0, 7)];
-						enemy.setposition(spawn_position.x, spawn_position.y);
-						enemies.add(enemy);
+						enemy_spawner.begin(spawn_position.x, spawn_position.y);
+						spawn_particle_group.add(enemy_spawner);
 						
 						total_spawn_count++;
 					}
@@ -286,7 +290,7 @@ class GameState extends FlxState
 					
 					// create one blood particle for every point of intensity in the rail
 					for (count in 0..._rail.the_rail.power * 2) {
-						var p:BloodParticle = new BloodParticle();
+						var p:BloodParticle = new BloodParticle( 85,0.3);
 						blood_group.add(p);
 						p.gobabygo(_enemy.base_x + 32, _enemy.base_y + 32, _rail.the_rail.direction.radians );
 					}
@@ -303,30 +307,31 @@ class GameState extends FlxState
 		
 		monster.visible = false;
 		monster.kill();
+		var mdistance:Float = 60;
 		for (count in 0...40) {
-			var p:BloodParticle = new BloodParticle();
+			var p:BloodParticle = new BloodParticle(mdistance);
 			blood_group.add(p);
 			p.gobabygo(monster.base_x + 32, monster.base_y + 32, 0 );
-			p = new BloodParticle();
+			p = new BloodParticle(mdistance);
 			p.gobabygo(monster.base_x + 32, monster.base_y + 32, Math.PI/2 );
 			blood_group.add(p);
-			p = new BloodParticle();
+			p = new BloodParticle(mdistance);
 			p.gobabygo(monster.base_x + 32, monster.base_y + 32, Math.PI );
 			blood_group.add(p);
-			p = new BloodParticle();
+			p = new BloodParticle(mdistance);
 			p.gobabygo(monster.base_x + 32, monster.base_y + 32, 3*Math.PI/2 );
 			blood_group.add(p);
 			
-			p = new BloodParticle();
+			p = new BloodParticle(mdistance);
 			blood_group.add(p);
 			p.gobabygo(monster.base_x + 32, monster.base_y + 32, 0 + Math.PI/4);
-			p = new BloodParticle();
+			p = new BloodParticle(mdistance);
 			p.gobabygo(monster.base_x + 32, monster.base_y + 32, Math.PI/2 + Math.PI/4 );
 			blood_group.add(p);
-			p = new BloodParticle();
+			p = new BloodParticle(mdistance);
 			p.gobabygo(monster.base_x + 32, monster.base_y + 32, Math.PI + Math.PI/4 );
 			blood_group.add(p);
-			p = new BloodParticle();
+			p = new BloodParticle(mdistance);
 			p.gobabygo(monster.base_x + 32, monster.base_y + 32, 3*Math.PI/2 + Math.PI/4 );
 			blood_group.add(p);
 			
