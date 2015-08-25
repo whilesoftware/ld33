@@ -34,6 +34,8 @@ class Monster extends FlxGroup
 	var left_leg:FlxSprite = new FlxSprite();
 	var right_leg:FlxSprite = new FlxSprite();
 	
+	var shadow:FlxSprite = new FlxSprite();
+	
 	public var base_x:Float;
 	public var base_y:Float;
 	
@@ -70,6 +72,10 @@ class Monster extends FlxGroup
 		charge_effect = new ChargeEffect();
 		add(charge_effect);
 		
+		shadow.loadGraphic("assets/images/shadow.png", false, 64, 64);
+		shadow.solid = false;
+		shadow.immovable = true;
+		
 		eye.loadGraphic("assets/images/monster-spritesheet.png", true, 64, 64);
 		eye.animation.add("cycle", [12, 13, 14, 15], 10, true);
 		eye.solid = false;
@@ -101,6 +107,7 @@ class Monster extends FlxGroup
 		right_leg.solid = false;
 		right_leg.immovable = true;
 		
+		add(shadow);
 		add(left_leg);
 		add(right_leg);
 		add(chest);
@@ -141,10 +148,28 @@ class Monster extends FlxGroup
 		var left_leg_pos:Vector2 = new Vector2(base_x, base_y);
 		var right_leg_pos:Vector2 = new Vector2(base_x, base_y);
 		
-		
+		// shadow is always static
+		shadow.setPosition(base_x, base_y);
 		
 		// set offset of each body part to further animate
 		// walk cycle (bounces up and down, feet shuffle left/right)
+		var bounce_offset:Vector2 = new Vector2(0, 0);
+		
+		// walking?
+		if (h_move_direction != 0 || v_move_direction != 0) {
+			// we are walking in some direction
+			left_leg_pos.x += 1.1 * ((Reg.frame_number % 8) - 3.5);
+			right_leg_pos.x += 1.1 * (((Reg.frame_number + 4) % 8) - 3.5);
+			
+			bounce_offset.y = Math.sin(Reg.frame_number / 5 * Math.PI);
+		}else {
+			// we are not walking
+			bounce_offset.y = Math.sin(Reg.frame_number / 60 * Math.PI);
+		}
+		
+		eye_pos.y += bounce_offset.y;
+		pupil_pos.y += bounce_offset.y;
+		chest_pos.y += bounce_offset.y;
 		
 		// eyes point towards the mouse cursor
 		mouse_offset.x = FlxG.mouse.getWorldPosition().x;
@@ -192,14 +217,7 @@ class Monster extends FlxGroup
 			pupil.animation.play("0");
 		}
 		
-		// walking?
-		if (h_move_direction != 0 || v_move_direction != 0) {
-			// we are walking in some direction
-			left_leg_pos.x += 1.1 * ((Reg.frame_number % 8) - 3.5);
-			right_leg_pos.x += 1.1 * (((Reg.frame_number + 4) % 8) - 3.5);
-		}else {
-			// we are not walking
-		}
+		
 		
 		
 		// finally, apply the new positions to each body part
@@ -325,8 +343,6 @@ class Monster extends FlxGroup
 					yindex--;
 				}
 				
-				
-				
 				//trace(xindex + " - " + yindex);
 				
 				tree = Reg.trees[yindex * Reg.gamestate.arena_width + xindex];
@@ -343,6 +359,7 @@ class Monster extends FlxGroup
 			new_rail.gogogo(startpos.x, startpos.y, rail_vector.radians, rail_vector.length, mouse_offset.x, mouse_offset.y, intensity, rail_vector); 
 			
 			FlxG.camera.shake(0.005 * intensity, 0.2);
+			FlxG.camera.flash(0x66ffffff, 0.02 * intensity);
 			
 			rail_vector.normalize();
 			monster_collider.physics.x += -rail_vector.x * 1000 * intensity;

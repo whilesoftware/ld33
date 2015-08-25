@@ -305,6 +305,8 @@ class GameState extends FlxState
 		state = gameover;
 		state_start_time = Reg.frame_number;
 		
+		FlxG.camera.flash(0xFFe70000, 0.15);
+		
 		monster.visible = false;
 		monster.kill();
 		var mdistance:Float = 60;

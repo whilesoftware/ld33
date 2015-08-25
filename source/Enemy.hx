@@ -26,6 +26,8 @@ class Enemy extends FlxGroup
 	var left_arm:FlxSprite = new FlxSprite();
 	var right_arm:FlxSprite = new FlxSprite();
 	
+	var shadow:FlxSprite = new FlxSprite();
+	
 	public var base_x:Float;
 	public var base_y:Float;
 	
@@ -61,6 +63,10 @@ class Enemy extends FlxGroup
 		next_pathfind_time = Reg.frame_number + pathfind_timeout;
 		
 		id = get_new_jd();
+		
+		shadow.loadGraphic("assets/images/shadow.png", false, 64, 64);
+		shadow.solid = false;
+		shadow.immovable = true;
 		
 		enemy_collider = new EnemyCollider();
 		enemy_collider.enemy_id = id;
@@ -98,6 +104,7 @@ class Enemy extends FlxGroup
 		right_arm.solid = false;
 		right_arm.immovable = true;
 		
+		add(shadow);
 		add(left_leg);
 		add(right_leg);
 		add(chest);
@@ -147,7 +154,8 @@ class Enemy extends FlxGroup
 		var left_arm_pos:Vector2 = new Vector2(base_x, base_y);
 		var right_arm_pos:Vector2 = new Vector2(base_x, base_y);
 		
-		
+		// shadow is always static
+		shadow.setPosition(base_x, base_y);
 		
 		// set offset of each body part to further animate
 		// walk cycle (bounces up and down, feet shuffle left/right)

@@ -8,13 +8,9 @@ import lime.math.Vector2;
 #end
 import flixel.tweens.FlxEase;
 
-/**
- * ...
- * @author ...
- */
+
 class BloodParticle extends FlxSprite 
 {
-
 	var distance:Float = 90;
 	var spatter_size:Int = 1;
 	var fall_time:Float = 0;

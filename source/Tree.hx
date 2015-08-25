@@ -17,6 +17,7 @@ class Tree extends FlxGroup
 	
 	var trunk:FlxSprite = new FlxSprite();
 	public  var bush:FlxSprite = new FlxSprite();
+	var shadow:FlxSprite = new FlxSprite();
 	
 	var base_x:Float;
 	var base_y:Float;
@@ -52,6 +53,10 @@ class Tree extends FlxGroup
 		tree_collider.tree_id = id;
 		add(tree_collider);
 		
+		shadow.loadGraphic("assets/images/shadow.png", false, 64, 64);
+		shadow.solid = false;
+		shadow.immovable = true;
+		
 		trunk.loadGraphic("assets/images/tree.png", true, 64, 64);
 		trunk.animation.add("0", [0], 2, true);
 		trunk.animation.add("1", [1], 2, true);
@@ -68,6 +73,7 @@ class Tree extends FlxGroup
 		bush.solid = false;
 		bush.immovable = true;
 		
+		add(shadow);
 		add(trunk);
 		// we don't add the bush here, the gamestate adds it later
 		
@@ -102,6 +108,9 @@ class Tree extends FlxGroup
 	
 	public override function update(elapsed:Float):Void {
 		// set position
+		// shadow is always static
+		shadow.setPosition(base_x, base_y);
+		
 		trunk.setPosition(base_x, base_y);
 		
 		
