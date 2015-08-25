@@ -67,8 +67,8 @@ class Main extends Sprite
 		}
 
 		
-		var unique_id:String = SessionData.generateID("ld33_");
-        var crashDumper = new CrashDumper(unique_id);
+//		var unique_id:String = SessionData.generateID("ld33_");
+//        var crashDumper = new CrashDumper(unique_id);
 		
 		
 		addChild(new FlxGame(gameWidth, gameHeight, initialState, zoom, framerate, framerate, skipSplash, startFullscreen));

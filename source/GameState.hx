@@ -15,12 +15,19 @@ import flixel.FlxCamera.FlxCameraFollowStyle;
 import openfl.Assets;
 import flixel.util.FlxCollision;
 import flixel.input.keyboard.FlxKey;
+import flixel.text.FlxText;
 
 /**
  * A FlxState which can be used for the game's menu.
  */
 class GameState extends FlxState
 {
+	public var score:Int = 0;
+	var title_text:FlxText;
+	var instructions_text:FlxText;
+	var score_text:FlxText;
+	var gameover_text:FlxText;
+
 	var monster:Monster;
 	var tilemap:FlxTilemap;
 	
@@ -46,7 +53,7 @@ class GameState extends FlxState
 	static inline var pregame:Int = -1;
 	static inline var playing:Int = 0;
 	static inline var gameover:Int = 1;
-	var state:Int = -100;
+	public var state:Int = -100;
 	
 	/**
 	 * Function that is called up when to state is created to set it up. 
@@ -54,8 +61,15 @@ class GameState extends FlxState
 	override public function create():Void
 	{
 		super.create();
+
+		score = 0;
 		//FlxG.camera.bgColor = 0xff262626;
 		FlxG.camera.bgColor = 0xff5c5c5c;
+
+		title_text = new FlxText(8*64-50,290,200,"Moster Garten", 16);
+		instructions_text = new FlxText(10*64,700,300,"WASD + mouse - click to begin", 8);
+		score_text = new FlxText(500,500,300,"the score", 24);
+		gameover_text = new FlxText(10*64,700,300,"das baby schlaft nicht");
 		
 		FlxG.worldBounds.set(0, 0, tile_width * arena_width, tile_height * arena_height);
 		
@@ -123,7 +137,7 @@ class GameState extends FlxState
 		// create the monster and put him in the middle of the screen
 		monster = new Monster();
 		add(monster);
-		monster.setposition(FlxG.width / 2, FlxG.height / 2);
+		monster.setposition(8*64 + 80,16*32);
 		
 		Reg.monster = monster;
 		
@@ -148,6 +162,11 @@ class GameState extends FlxState
 		FlxG.camera.setScrollBoundsRect(0, 0, 32 * 32, 32 * 32);
 		
 		state = pregame;
+
+		add(title_text);
+		add(instructions_text);
+		add(score_text);
+		add(gameover_text);
 	}
 	
 	/**
@@ -171,6 +190,11 @@ class GameState extends FlxState
 		switch(state) {
 			case pregame:
 				// show the title screen
+				title_text.visible = true;
+				instructions_text.visible = true;
+				score_text.visible = false;
+				gameover_text.visible = false;
+				
 				if (FlxG.mouse.get_justPressed()) {
 					state = playing;
 					// spawn the first enemy in 30 frames (1/2 second)
@@ -179,7 +203,16 @@ class GameState extends FlxState
 				}
 				
 			case playing:
-				state = playing;
+				title_text.visible = false;
+				instructions_text.visible = false;
+				score_text.visible = true;
+				score_text.text = Std.string(score);
+				//score_text.x = monster.base_x;
+				//score_text.y = monster.base_y - 30;
+				gameover_text.visible = false;
+
+				// update the score text
+
 				// is it time to spawn a bad guy?
 				if (Reg.frame_number == next_spawn_time) {
 					for (t in 0...next_spawn_count) {
@@ -212,10 +245,16 @@ class GameState extends FlxState
 				
 				
 			case gameover:
-				state = gameover;
+				title_text.visible = false;
+				instructions_text.visible = false;
+				score_text.visible = true;
+				gameover_text.visible = true;
 				// show the kill count
 				
 				// if they press "retry", reset the game
+				if (FlxG.mouse.get_justPressed()) {
+					FlxG.resetGame();
+				}
 				
 		}
 		
@@ -244,7 +283,7 @@ class GameState extends FlxState
 					_enemy.hit(_rail.the_rail);
 					
 					// create one blood particle for every point of intensity in the rail
-					for (count in 0..._rail.the_rail.power * 4) {
+					for (count in 0..._rail.the_rail.power * 2) {
 						var p:BloodParticle = new BloodParticle();
 						blood_group.add(p);
 						p.gobabygo(_enemy.base_x + 32, _enemy.base_y + 32, _rail.the_rail.direction.radians );
@@ -258,6 +297,22 @@ class GameState extends FlxState
 	
 	function kill_monster(a:FlxObject, b:FlxObject) {
 		state = gameover;
-		FlxG.resetGame();
+				monster.visible = false;
+				monster.kill();
+				for (count in 0...40) {
+					var p:BloodParticle = new BloodParticle();
+					blood_group.add(p);
+					p.gobabygo(monster.base_x + 32, monster.base_y + 32, 0 );
+					p = new BloodParticle();
+					p.gobabygo(monster.base_x + 32, monster.base_y + 32, Math.PI/2 );
+					blood_group.add(p);
+					p = new BloodParticle();
+					p.gobabygo(monster.base_x + 32, monster.base_y + 32, Math.PI );
+					blood_group.add(p);
+					p = new BloodParticle();
+					p.gobabygo(monster.base_x + 32, monster.base_y + 32, 3*Math.PI/2 );
+					blood_group.add(p);
+				}
+		//FlxG.resetGame();
 	}
 }

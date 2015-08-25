@@ -15,7 +15,7 @@ import flixel.tweens.FlxEase;
 class BushParticle extends FlxSprite 
 {
 	
-	var distance:Float = 90;
+	var distance:Float = 40;
 	
 	public function new() 
 	{

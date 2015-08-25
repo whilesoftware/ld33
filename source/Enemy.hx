@@ -193,7 +193,12 @@ class Enemy extends FlxGroup
 			next_pathfind_time = Reg.frame_number + pathfind_timeout;
 			
 			// pick ourselves a path
-			the_path = Reg.tilemap.findPath(FlxPoint.get(base_x + 32, base_y + 42), FlxPoint.get(Reg.monster.base_x + 32, Reg.monster.base_y + 42));
+			if (Reg.monster.alive) {
+				the_path = Reg.tilemap.findPath(FlxPoint.get(base_x + 32, base_y + 42), FlxPoint.get(Reg.monster.base_x + 32, Reg.monster.base_y + 42));
+			}else{
+				the_path = null;
+			}
+
 			
 			cpath_index = -1;
 		}
@@ -247,6 +252,7 @@ class Enemy extends FlxGroup
 	}
 	public function die() {
 		//trace("enemy died! " + id);
+		Reg.gamestate.score++;
 		kill();
 	}
 	
