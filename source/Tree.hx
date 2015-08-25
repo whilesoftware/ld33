@@ -28,6 +28,8 @@ class Tree extends FlxGroup
 	var bush_cycle_offset:Int = 0;
 	var bush_cycle:Float = 0;
 	
+	var shake_start_time:Int = -10000;
+	
 	private static function get_new_jd():Int {
 		var retval:Int = next_tree_id;
 		next_tree_id++;
@@ -112,6 +114,25 @@ class Tree extends FlxGroup
 		}
 		
 		super.update(elapsed);
+	}
+	
+	public function blowup(_angle:Float) {
+		// generate some particles to represent the bush exploding
+		if (has_bush) {
+			// create a new set of bush particles
+			for (count in 0...40) {
+				var p:BushParticle = new BushParticle();
+				Reg.gamestate.particle_group.add(p);
+				p.gobabygo(base_x + 32, base_y + 32, _angle);
+			}
+		}
+		has_bush = false;
+	}
+	
+	public function shake() {
+		if (has_bush) {
+			shake_start_time = Reg.frame_number;
+		}
 	}
 	
 }

@@ -66,10 +66,10 @@ class Main extends Sprite
 			gameHeight = Math.ceil(stageHeight / zoom);
 		}
 
-		/*
+		
 		var unique_id:String = SessionData.generateID("ld33_");
         var crashDumper = new CrashDumper(unique_id);
-		*/
+		
 		
 		addChild(new FlxGame(gameWidth, gameHeight, initialState, zoom, framerate, framerate, skipSplash, startFullscreen));
 	}

@@ -5,6 +5,7 @@ import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.FlxObject;
 import flixel.group.FlxGroup;
+import flixel.math.FlxPoint;
 import flixel.text.FlxText;
 import flixel.tile.FlxTilemap;
 import flixel.ui.FlxButton;
@@ -12,6 +13,8 @@ import flixel.math.FlxMath;
 import flixel.util.FlxStringUtil;
 import flixel.FlxCamera.FlxCameraFollowStyle;
 import openfl.Assets;
+import flixel.util.FlxCollision;
+import flixel.input.keyboard.FlxKey;
 
 /**
  * A FlxState which can be used for the game's menu.
@@ -23,12 +26,27 @@ class GameState extends FlxState
 	
 	var tile_width:Int = 64;
 	var tile_height:Int = 32;
-	var arena_width:Int = 16;
-	var arena_height:Int = 32;
+	public var arena_width:Int = 16;
+	public var arena_height:Int = 32;
+	
+	var spawn_points:Map<Int,FlxPoint> = new Map<Int,FlxPoint>();
 	
 	var bushgroup:FlxGroup;
-	var enemies:FlxGroup;
+	var enemies:FlxTypedGroup<Enemy>;
 	var railshot_colliders:FlxGroup;
+	
+	var next_spawn_time:Int = -1;
+	var next_spawn_count:Int = 1;
+	var total_spawn_count:Int = 0;
+	
+	public var particle_group:FlxGroup;
+	public var blood_group:FlxGroup;
+	public var kill_particle_group:FlxGroup;
+	
+	static inline var pregame:Int = -1;
+	static inline var playing:Int = 0;
+	static inline var gameover:Int = 1;
+	var state:Int = -100;
 	
 	/**
 	 * Function that is called up when to state is created to set it up. 
@@ -36,14 +54,42 @@ class GameState extends FlxState
 	override public function create():Void
 	{
 		super.create();
-		FlxG.camera.bgColor = 0xff262626;
+		//FlxG.camera.bgColor = 0xff262626;
+		FlxG.camera.bgColor = 0xff5c5c5c;
 		
 		FlxG.worldBounds.set(0, 0, tile_width * arena_width, tile_height * arena_height);
 		
 		Reg.gamestate = this;
 		
+		Reg.frame_number = -1;
+		Reg.trees = new Map<Int,Tree>();
+		Reg.enemies = new Map<Int,Enemy>();
+		
+		next_spawn_count = 1;
+		total_spawn_count = 0;
+		
+		spawn_points[0] = FlxPoint.get(5, 4);
+		spawn_points[1] = FlxPoint.get(10, 4);
+		spawn_points[2] = FlxPoint.get(1, 14);
+		spawn_points[3] = FlxPoint.get(14, 14);
+		spawn_points[4] = FlxPoint.get(5, 25);
+		spawn_points[5] = FlxPoint.get(10, 25);
+		spawn_points[6] = FlxPoint.get(7, 28);
+		spawn_points[7] = FlxPoint.get(8, 28);
+		
+		for (key in spawn_points.keys()) {
+			spawn_points[key].x *= tile_width;
+			spawn_points[key].y *= tile_height;
+		}
+		
+		blood_group = new FlxGroup();
+		add(blood_group);
+		
+		kill_particle_group = new FlxGroup();
+		add(kill_particle_group);
+		
 		// create a few grasses in random positions
-		for (x in 1...100) {
+		for (x in 1...500) {
 			add(new Grass(Math.floor(Math.random() * tile_width * arena_width), Math.floor(Math.random() * tile_height * arena_height), Math.random() > 0.6));
 		}
 		
@@ -66,19 +112,13 @@ class GameState extends FlxState
 					var tree:Tree = new Tree();
 					tree.SetPosition(ix * tile_width + MathHelper.RandomRangeInt(-3,3), iy * tile_height - 32);
 					add(tree);
-					Reg.trees[tree.id] = tree;
+					Reg.trees[iy * arena_width + ix] = tree;
 				}
 			}
 		}
 		
-		enemies = new FlxGroup();
+		enemies = new FlxTypedGroup<Enemy>();
 		add(enemies);
-		for (t in 0...10) {
-			var enemy:Enemy = new Enemy();
-			enemy.setposition(Math.floor(Math.random() * 600), Math.floor(Math.random() * 600));
-			add(enemy);
-			enemies.add(enemy.enemy_collider);
-		}
 		
 		// create the monster and put him in the middle of the screen
 		monster = new Monster();
@@ -88,7 +128,7 @@ class GameState extends FlxState
 		Reg.monster = monster;
 		
 		Reg.rails = new FlxGroup();
-		Reg.rail_colliders = new FlxGroup();
+		Reg.rail_colliders = new FlxTypedGroup<RailshotCollider>();
 		add(Reg.rails);
 		add(Reg.rail_colliders);
 		
@@ -100,9 +140,14 @@ class GameState extends FlxState
 		}
 		add(bushgroup);
 		
+		particle_group = new FlxGroup();
+		add(particle_group);
+		
 		// tell the camera to follow the character
 		FlxG.camera.follow(monster.monster_collider,FlxCameraFollowStyle.TOPDOWN,null,0.5);
 		FlxG.camera.setScrollBoundsRect(0, 0, 32 * 32, 32 * 32);
+		
+		state = pregame;
 	}
 	
 	/**
@@ -123,16 +168,96 @@ class GameState extends FlxState
 		
 		monster.update(elapsed);
 		
+		switch(state) {
+			case pregame:
+				// show the title screen
+				if (FlxG.mouse.get_justPressed()) {
+					state = playing;
+					// spawn the first enemy in 30 frames (1/2 second)
+					next_spawn_time = Reg.frame_number + 30;
+					next_spawn_count = 1;
+				}
+				
+			case playing:
+				state = playing;
+				// is it time to spawn a bad guy?
+				if (Reg.frame_number == next_spawn_time) {
+					for (t in 0...next_spawn_count) {
+						var enemy:Enemy = new Enemy();
+						var spawn_position:FlxPoint = spawn_points[MathHelper.RandomRangeInt(0, 7)];
+						enemy.setposition(spawn_position.x, spawn_position.y);
+						enemies.add(enemy);
+						
+						total_spawn_count++;
+					}
+					
+					if (total_spawn_count > 50) {
+						next_spawn_time = Reg.frame_number + 1 * 60;
+						next_spawn_count = 5;
+					}else if (total_spawn_count > 18) {
+						next_spawn_time = Reg.frame_number + 3 * 60;
+						next_spawn_count = 4;
+					}else if (total_spawn_count > 8) {
+						next_spawn_time = Reg.frame_number + 3 * 60;
+						next_spawn_count = 3;
+					}else if (total_spawn_count > 3) {
+						next_spawn_time = Reg.frame_number + 5 * 60;
+						next_spawn_count = 2;
+					}else {
+						next_spawn_count = 1;
+						next_spawn_time = Reg.frame_number + 5 * 60;
+					}
+				}
+				
+				
+				
+			case gameover:
+				state = gameover;
+				// show the kill count
+				
+				// if they press "retry", reset the game
+				
+		}
+		
+		if (FlxG.keys.anyPressed([FlxKey.R])) {
+			FlxG.resetGame();
+		}
+		
 		
 		FlxG.collide(tilemap, monster.monster_collider);
+		FlxG.collide(tilemap, enemies);
+		FlxG.overlap(monster.monster_collider, enemies,kill_monster);
 		//FlxG.overlap(monster.monster_collider, bad_guys);
-		FlxG.overlap(enemies, Reg.rail_colliders, enemy_hit);
+		//FlxG.overlap(enemies, Reg.rail_colliders, enemy_hit);
+		
+		// check each railshot collider against each enemy
+		// brute force. slow. i'm embarrassed. don't do this in production
+		for (_enemy in enemies.members) {
+			if (_enemy == null || !_enemy.alive) {
+				continue;
+			}
+			for (_rail in Reg.rail_colliders.members) {
+				if (_rail == null || !_rail.alive) {
+					continue;
+				}
+				if (FlxCollision.pixelPerfectCheck(_rail, _enemy.chest)) {
+					_enemy.hit(_rail.the_rail);
+					
+					// create one blood particle for every point of intensity in the rail
+					for (count in 0..._rail.the_rail.power * 4) {
+						var p:BloodParticle = new BloodParticle();
+						blood_group.add(p);
+						p.gobabygo(_enemy.base_x + 32, _enemy.base_y + 32, _rail.the_rail.direction.radians );
+					}
+				}
+			}
+		}
 		
 		super.update(elapsed);
 	}	
 	
-	public function enemy_hit(enemy:EnemyCollider, rail:RailshotCollider) {
-		trace("enemy " + enemy.enemy_id + " hit by rail " + rail.id);
-		enemy.visible = false;
+	function kill_monster(a:FlxObject, b:FlxObject) {
+		state = gameover;
+		FlxG.resetGame();
 	}
 }

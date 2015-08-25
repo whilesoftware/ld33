@@ -16,12 +16,15 @@ import flixel.util.FlxColor;
 class Railshot extends FlxGroup 
 {
 	var shot_body:FlxSprite;
+	
+	public var power:Int = 0;
+	public var direction:FlxVector = new FlxVector();
 
 	public function new() 
 	{
 		super();
 		
-		trace("railshot:new()");
+		//trace("railshot:new()");
 		
 		shot_body = new FlxSprite();
 		shot_body.loadGraphic("assets/images/wide-railshot.png", true, 128, 16);
@@ -33,27 +36,14 @@ class Railshot extends FlxGroup
 	}
 	
 	public function gogogo(xstart:Float, ystart:Float, _angle:Float, _length:Float, angle_x:Float, angle_y:Float, size:Float, fvec:FlxVector) {
-		trace("railshot:gogogo()");
-		/*
-		var new_sprite:FlxSprite = new FlxSprite();
-		new_sprite.makeGraphic(64, 2, FlxColor.MAGENTA);
-		//new_sprite.setPosition(xstart + angle_x * 64, ystart + angle_y * 64);
-		new_sprite.setPosition(200, 200);
-		new_sprite.origin.set(0, 1);
-		trace("angle = " + _angle);
-		new_sprite.angle = _angle * 180 / Math.PI;
-		add(new_sprite);
 		
-		new FlxTimer().start(0.3).onComplete = function(t:FlxTimer):Void {
-			kill();
-			pgroup.remove(this);
-		}
-		return;
-		*/
+		direction.x = angle_x;
+		direction.y = angle_y;
+		direction.normalize();
 		
-		//_length = 128;
+		power = Math.round(size * 13);
+		
 		// start position
-		//var center_pos:FlxPoint = new FlxPoint(xstart + _length/2 * Math.cos(_angle), ystart + _length/2 * Math.sin(_angle));
 		var center_pos:FlxPoint = new FlxPoint(xstart, ystart);
 		
 		
@@ -76,7 +66,7 @@ class Railshot extends FlxGroup
 		
 		var rc:RailshotCollider = 
 			new RailshotCollider(
-				0, 
+				this, 
 				_length, 
 				size * 8, 
 				xstart +  fvec.x / 2, 

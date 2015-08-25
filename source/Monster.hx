@@ -34,8 +34,8 @@ class Monster extends FlxGroup
 	var left_leg:FlxSprite = new FlxSprite();
 	var right_leg:FlxSprite = new FlxSprite();
 	
-	var base_x:Float;
-	var base_y:Float;
+	public var base_x:Float;
+	public var base_y:Float;
 	
 	var LEFT:Int = -1;
 	var RIGHT:Int = 1;
@@ -62,7 +62,7 @@ class Monster extends FlxGroup
 	{
 		super();
 		
-		trace("new monster!");
+		//trace("new monster!");
 		
 		monster_collider = new MonsterCollider();
 		add(monster_collider);
@@ -230,6 +230,8 @@ class Monster extends FlxGroup
 		//base_y += active_v_speed;
 		monster_collider.velocity.x = active_h_speed * 100;
 		monster_collider.velocity.y = active_v_speed * 100;
+		
+		//trace("monster - moving at speed: " + active_h_speed + " " + active_v_speed);
 	}
 	
 	public function gather_input():Void {
@@ -265,7 +267,7 @@ class Monster extends FlxGroup
 		if (FlxG.mouse.justReleased && is_charging) {
 			is_charging = false;
 			fire_weapon = true;
-			trace("mouse just released!");
+			//trace("mouse just released!");
 		}
 	}
 	
@@ -295,14 +297,64 @@ class Monster extends FlxGroup
 			
 			
 			// where is this going to strike?
+			var tree:Tree = null;
 			if (! Reg.tilemap.ray(startpos, endpos, rayresult)) {
 				endpos = rayresult;
+				
+				// what tree is that going to hit?
+				var remainder:Int;
+				var xindex:Int = Math.floor(endpos.x / 64);
+				
+				remainder = Math.round(endpos.x) % 64;
+				if (mouse_offset.x < 0 && remainder < 10) {
+					xindex--;
+				}
+				if (mouse_offset.x > 0 && remainder > 50) {
+					xindex++;
+				}
+				
+				
+				
+				var yindex:Int = Math.floor(endpos.y / 32);
+				
+				remainder = Math.round(endpos.y) % 32;
+				if (mouse_offset.y > 0 && remainder > 25) {
+					yindex++;
+				}
+				if (mouse_offset.y < 0 && remainder < 6) {
+					yindex--;
+				}
+				
+				
+				
+				//trace(xindex + " - " + yindex);
+				
+				tree = Reg.trees[yindex * Reg.gamestate.arena_width + xindex];
+				
+				
+			}else {
+				return;	
 			}
 			
 			var rail_vector:FlxVector = new FlxVector(endpos.x - startpos.x, endpos.y - startpos.y);
 			
-			new_rail.gogogo(startpos.x, startpos.y, rail_vector.radians, rail_vector.length, mouse_offset.x, mouse_offset.y, Math.min(1,(Reg.frame_number - charge_start_time)/30), rail_vector); 
+			var intensity:Float = Math.min(1, (Reg.frame_number - charge_start_time) / 30);
 			
+			new_rail.gogogo(startpos.x, startpos.y, rail_vector.radians, rail_vector.length, mouse_offset.x, mouse_offset.y, intensity, rail_vector); 
+			
+			FlxG.camera.shake(0.005 * intensity, 0.2);
+			
+			rail_vector.normalize();
+			monster_collider.physics.x += -rail_vector.x * 1000 * intensity;
+			monster_collider.physics.y += -rail_vector.y * 1000 * intensity;
+			
+			if (tree != null) {
+				if (intensity > 0.5) {
+				tree.blowup(rail_vector.radians);
+			}else {
+				tree.shake();
+			}
+			}
 			
 		}
 	}

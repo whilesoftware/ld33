@@ -1,6 +1,8 @@
 package;
 import flixel.group.FlxGroup;
 import flixel.FlxSprite;
+import flixel.math.FlxPoint;
+import flixel.math.FlxVector;
 
 import flixel.util.FlxTimer;
 /**
@@ -13,17 +15,35 @@ class Enemy extends FlxGroup
 	
 	private static var next_enemy_id:Int = 0;
 	
+	public var  health:Int = 20;
+	
 	var mouth:FlxSprite = new FlxSprite();
-	var chest:FlxSprite = new FlxSprite();
+	public var chest:FlxSprite = new FlxSprite();
 	var left_leg:FlxSprite = new FlxSprite();
 	var right_leg:FlxSprite = new FlxSprite();
 	var left_arm:FlxSprite = new FlxSprite();
 	var right_arm:FlxSprite = new FlxSprite();
 	
-	var base_x:Float;
-	var base_y:Float;
+	public var base_x:Float;
+	public var base_y:Float;
 	
 	public var id:Int = -1;
+	
+	var next_pathfind_time:Int = 0;
+	var pathfind_timeout:Int = 60;
+	
+	var the_path:Array<FlxPoint> = null;
+	var cpath_index:Int = -1;
+	
+	var h_move_direction:Float = 0;
+	var v_move_direction:Float = 0;
+	var h_move_speed:Float = 1;
+	var v_move_speed:Float = 1;
+	var active_h_speed:Float = 0;
+	var active_v_speed:Float = 0;
+	
+	var enemy_collider_offset_x:Int = 16;
+	var enemy_collider_offset_y:Int = 40;
 	
 	private static function get_new_jd():Int {
 		var retval:Int = next_enemy_id;
@@ -35,11 +55,14 @@ class Enemy extends FlxGroup
 	{
 		super();
 		
+		pathfind_timeout += MathHelper.RandomRangeInt( -5, 60);
+		next_pathfind_time = Reg.frame_number + pathfind_timeout;
+		
 		id = get_new_jd();
 		
 		enemy_collider = new EnemyCollider();
 		enemy_collider.enemy_id = id;
-		//add(enemy_collider);
+		add(enemy_collider);
 		
 		chest.loadGraphic("assets/images/YV.png", true, 64, 64);
 		chest.animation.add("cycle", [24, 25, 26, 27], 10, true);
@@ -104,7 +127,7 @@ class Enemy extends FlxGroup
 		base_x = x;
 		base_y = y;
 		
-		enemy_collider.setPosition(base_x, base_y);
+		enemy_collider.setPosition(base_x + enemy_collider_offset_x, base_y + enemy_collider_offset_y);
 	}
 	
 	public function animate():Void {
@@ -125,7 +148,6 @@ class Enemy extends FlxGroup
 		
 		
 		// walking?
-		/*
 		if (h_move_direction != 0 || v_move_direction != 0) {
 			// we are walking in some direction
 			left_leg_pos.x += 1.1 * ((Reg.frame_number % 8) - 3.5);
@@ -133,7 +155,7 @@ class Enemy extends FlxGroup
 		}else {
 			// we are not walking
 		}
-		*/
+		
 		
 		// finally, apply the new positions to each body part
 		mouth.setPosition(mouth_pos.x, mouth_pos.y);
@@ -145,18 +167,92 @@ class Enemy extends FlxGroup
 	}
 	
 	public function move():Void {
+		active_h_speed = h_move_speed * h_move_direction;
+		active_v_speed = v_move_speed * v_move_direction;
+		
+		if (h_move_direction != 0 && v_move_direction == 0) {
+			active_h_speed *= 1.41;
+		}
+		if (v_move_direction != 0 && h_move_direction == 0) {
+			active_v_speed *= 1.2;
+		}
+		
+		active_h_speed *= 1.5;
+		active_v_speed *= 1.5;
+		
+		//base_x += active_h_speed;
+		//base_y += active_v_speed;
+		enemy_collider.velocity.x = active_h_speed * 100;
+		enemy_collider.velocity.y = active_v_speed * 100;
+		
+		//trace("enemy -   moving at speed: " + active_h_speed + " " + active_v_speed);
 	}
 	
 	public function gather_input():Void {
+		if (next_pathfind_time >= Reg.frame_number) {
+			next_pathfind_time = Reg.frame_number + pathfind_timeout;
+			
+			// pick ourselves a path
+			the_path = Reg.tilemap.findPath(FlxPoint.get(base_x + 32, base_y + 42), FlxPoint.get(Reg.monster.base_x + 32, Reg.monster.base_y + 42));
+			
+			cpath_index = -1;
+		}
+		
+		if (the_path == null) {
+			// don't move
+			h_move_direction = 0;
+			v_move_direction = 0;
+		}else {
+			var waypoint:FlxPoint = the_path[cpath_index + 1];
+			waypoint.x -= 32;
+			waypoint.y -= 42;
+			var _path:FlxVector = new FlxVector(waypoint.x - base_x, waypoint.y - base_y);
+			
+			// if we're within a few pixels of the waypoint, move on to the next one
+			if (_path.length < 5) {
+				cpath_index++;
+				if (cpath_index >= the_path.length-1) {
+					//trace("reached the end of the path! no more moving for me");
+					h_move_direction = 0;
+					v_move_direction = 0;
+					return;
+				}else{
+					waypoint = the_path[cpath_index + 1];
+					waypoint.x -= 32;
+					waypoint.y -= 42;
+					_path = new FlxVector(waypoint.x - base_x, waypoint.y - base_y);
+				}
+			}
+			
+			// move towards the next waypoint
+			_path.normalize();
+			h_move_direction = _path.x;
+			v_move_direction = _path.y;
+		}
 	}
 	
 	public function act() {
 		
 	}
+	public function hit(the_rail:Railshot) {
+		health -= the_rail.power;
+		
+		// push them back in the direction the rail was fired
+		enemy_collider.physics.x = the_rail.direction.x * the_rail.power * 100;
+		enemy_collider.physics.y = the_rail.direction.y * the_rail.power * 100;
+		
+		if (health <= 0) {
+			die();
+		}
+	}
+	public function die() {
+		//trace("enemy died! " + id);
+		kill();
+	}
 	
 	public override function update(elapsed:Float) {
-		base_x = enemy_collider.x;
-		base_y = enemy_collider.y;
+		base_x = enemy_collider.x - enemy_collider_offset_x;
+		base_y = enemy_collider.y - enemy_collider_offset_y;
 		
 		gather_input();
 		
