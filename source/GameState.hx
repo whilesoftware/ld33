@@ -54,6 +54,7 @@ class GameState extends FlxState
 	static inline var playing:Int = 0;
 	static inline var gameover:Int = 1;
 	public var state:Int = -100;
+	public var state_start_time:Int = 0;
 	
 	/**
 	 * Function that is called up when to state is created to set it up. 
@@ -68,7 +69,9 @@ class GameState extends FlxState
 
 		title_text = new FlxText(8*64-50,290,200,"Moster Garten", 16);
 		instructions_text = new FlxText(10*64,700,300,"WASD + mouse - click to begin", 8);
-		score_text = new FlxText(500,500,300,"the score", 24);
+		score_text = new FlxText(185 , 20, 300, "the score", 24);
+		score_text.alignment = FlxTextAlign.CENTER;
+		score_text.scrollFactor.set(0, 0);
 		gameover_text = new FlxText(10*64,700,300,"das baby schlaft nicht");
 		
 		FlxG.worldBounds.set(0, 0, tile_width * arena_width, tile_height * arena_height);
@@ -252,10 +255,9 @@ class GameState extends FlxState
 				// show the kill count
 				
 				// if they press "retry", reset the game
-				if (FlxG.mouse.get_justPressed()) {
+				if (FlxG.mouse.get_justPressed() && Reg.frame_number - state_start_time > 120) {
 					FlxG.resetGame();
 				}
-				
 		}
 		
 		if (FlxG.keys.anyPressed([FlxKey.R])) {
@@ -297,22 +299,45 @@ class GameState extends FlxState
 	
 	function kill_monster(a:FlxObject, b:FlxObject) {
 		state = gameover;
-				monster.visible = false;
-				monster.kill();
-				for (count in 0...40) {
-					var p:BloodParticle = new BloodParticle();
-					blood_group.add(p);
-					p.gobabygo(monster.base_x + 32, monster.base_y + 32, 0 );
-					p = new BloodParticle();
-					p.gobabygo(monster.base_x + 32, monster.base_y + 32, Math.PI/2 );
-					blood_group.add(p);
-					p = new BloodParticle();
-					p.gobabygo(monster.base_x + 32, monster.base_y + 32, Math.PI );
-					blood_group.add(p);
-					p = new BloodParticle();
-					p.gobabygo(monster.base_x + 32, monster.base_y + 32, 3*Math.PI/2 );
-					blood_group.add(p);
-				}
-		//FlxG.resetGame();
+		state_start_time = Reg.frame_number;
+		
+		monster.visible = false;
+		monster.kill();
+		for (count in 0...40) {
+			var p:BloodParticle = new BloodParticle();
+			blood_group.add(p);
+			p.gobabygo(monster.base_x + 32, monster.base_y + 32, 0 );
+			p = new BloodParticle();
+			p.gobabygo(monster.base_x + 32, monster.base_y + 32, Math.PI/2 );
+			blood_group.add(p);
+			p = new BloodParticle();
+			p.gobabygo(monster.base_x + 32, monster.base_y + 32, Math.PI );
+			blood_group.add(p);
+			p = new BloodParticle();
+			p.gobabygo(monster.base_x + 32, monster.base_y + 32, 3*Math.PI/2 );
+			blood_group.add(p);
+			
+			p = new BloodParticle();
+			blood_group.add(p);
+			p.gobabygo(monster.base_x + 32, monster.base_y + 32, 0 + Math.PI/4);
+			p = new BloodParticle();
+			p.gobabygo(monster.base_x + 32, monster.base_y + 32, Math.PI/2 + Math.PI/4 );
+			blood_group.add(p);
+			p = new BloodParticle();
+			p.gobabygo(monster.base_x + 32, monster.base_y + 32, Math.PI + Math.PI/4 );
+			blood_group.add(p);
+			p = new BloodParticle();
+			p.gobabygo(monster.base_x + 32, monster.base_y + 32, 3*Math.PI/2 + Math.PI/4 );
+			blood_group.add(p);
+			
+		}
+		
+		// put all the enemies in celebration mode
+		for (_enemy in enemies.members) {
+			if (_enemy == null || !_enemy.alive) {
+				continue;
+			}
+			_enemy.celebrate();
+		}
 	}
 }

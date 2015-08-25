@@ -17,6 +17,8 @@ class Enemy extends FlxGroup
 	
 	public var  health:Int = 20;
 	
+	var celebration:Bool = false;
+	
 	var mouth:FlxSprite = new FlxSprite();
 	public var chest:FlxSprite = new FlxSprite();
 	var left_leg:FlxSprite = new FlxSprite();
@@ -123,6 +125,12 @@ class Enemy extends FlxGroup
 		}
 	}
 	
+	public function celebrate() {
+		celebration = true;
+		left_arm.animation.play("cycle2");
+		right_arm.animation.play("cycle2");
+	}
+	
 	public function setposition(x:Float, y:Float) {
 		base_x = x;
 		base_y = y;
@@ -154,6 +162,15 @@ class Enemy extends FlxGroup
 			right_leg_pos.x += 1.1 * (((Reg.frame_number + 4) % 8) - 3.5);
 		}else {
 			// we are not walking
+		}
+		
+		if (celebration) {
+			// arms should be pumping up and down
+			left_arm_pos.x += 1.5 * Math.sin(Reg.frame_number / 7.5 * 1.5);
+			right_arm_pos.x += 1.5 * Math.sin(Reg.frame_number / 7.5 * 1.5);
+			
+			left_arm_pos.y += 2 * Math.cos(Reg.frame_number / 3.75 * 1.5);
+			right_arm_pos.y += 2 *Math.cos(Reg.frame_number / 3.75 * 1.5);
 		}
 		
 		
@@ -274,3 +291,4 @@ class Enemy extends FlxGroup
 	}
 	
 }
+

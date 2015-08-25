@@ -264,7 +264,7 @@ class Monster extends FlxGroup
 			charge_start_time = Reg.frame_number;
 		}
 		
-		if (FlxG.mouse.justReleased && is_charging) {
+		if (FlxG.mouse.justReleased && is_charging && alive) {
 			is_charging = false;
 			fire_weapon = true;
 			//trace("mouse just released!");
