@@ -355,6 +355,14 @@ class Monster extends FlxGroup
 			var rail_vector:FlxVector = new FlxVector(endpos.x - startpos.x, endpos.y - startpos.y);
 			
 			var intensity:Float = Math.min(1, (Reg.frame_number - charge_start_time) / 30);
+
+			if (intensity < 0.3) {
+				// small shot, small sound
+				FlxG.sound.play("blast-small");
+			}else{
+				// big shot, volume according to intensity
+				FlxG.sound.play("blast-full", intensity);
+			}
 			
 			new_rail.gogogo(startpos.x, startpos.y, rail_vector.radians, rail_vector.length, mouse_offset.x, mouse_offset.y, intensity, rail_vector); 
 			

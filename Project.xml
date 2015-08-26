@@ -82,6 +82,15 @@
 	<haxedef name="NAPE_RELEASE_BUILD" unless="debug" />
 	
 	<!--------------------------------CUSTOM---------------------------------------->
+    <assets path="assets/sounds" if="flash" embed="true">
+        <sound path="energy-blast-full.mp3" id="blast-full" />
+        <sound path="energy-blast-small.mp3" id="blast-small" />
+    </assets>
+
+    <assets path="assets/sounds" unless="flash" embed="true">
+        <sound path="energy-blast-full.ogg" id="blast-full" />
+        <sound path="energy-blast-small.ogg" id="blast-small" />
+	</assets>
 	
 	<!--Place custom nodes like icons here (higher priority to override the HaxeFlixel icon)-->
 </project>
